@@ -1,6 +1,6 @@
 # News Radio
 
-毎朝自動でニュースを収集し、NotebookLM の Audio Overview 機能を使って音声ニュース番組を生成、Discord に投稿するボットです。
+毎朝自動でニュースを収集し、NotebookLM の Audio Overview 機能を使ってラジオ風音声を生成、Discord に投稿するツールです。
 
 ## 構成図
 
@@ -8,10 +8,10 @@
 cron (毎朝 7:00 JST)
   |
   v
-[Brave Search API] --- ニュース記事を検索・取得
+[Discord API] --- ニュースチャンネルから最新投稿を取得
   |
   v
-[notebooklm-py] --- 記事を元に Audio Overview (音声) を生成
+[notebooklm-py] --- ニュースを元に Audio Overview (音声) を生成
   |
   v
 [Discord Webhook] --- 生成した音声ファイルを投稿
@@ -20,8 +20,8 @@ cron (毎朝 7:00 JST)
 ## 技術スタック
 
 - Python 3.12
-- [notebooklm-py](https://github.com/nichochar/notebooklm-py) - 非公式 NotebookLM API クライアント
-- Brave Search API - ニュース検索
+- [notebooklm-py](https://github.com/teng-lin/notebooklm-py) - 非公式 NotebookLM API クライアント
+- Discord API - ニュース取得元
 - Discord Webhook - 音声ファイルの配信
 
 ## ディレクトリ構成
@@ -31,8 +31,9 @@ news-radio/
 ├── src/
 │   └── news_radio/
 │       ├── __init__.py
+│       ├── __main__.py      # python -m news_radio 用
 │       ├── main.py          # エントリーポイント
-│       ├── search.py        # Brave Search によるニュース取得
+│       ├── search.py        # Discord チャンネルからニュース取得
 │       ├── audio.py         # NotebookLM Audio Overview 生成
 │       └── discord.py       # Discord Webhook 投稿
 ├── pyproject.toml
@@ -45,28 +46,25 @@ news-radio/
 ### 前提条件
 
 - Python 3.12 以上
-- 各種 API キー
+- Discord Bot トークン
+- Google アカウント (NotebookLM 用)
 
 ### インストール
 
 ```bash
-# リポジトリをクローン
 git clone https://github.com/br-to/news-radio.git
 cd news-radio
-
-# 依存関係のインストール
 pip install -e .
 ```
 
 ### 環境変数
 
-以下の環境変数を設定してください:
-
 | 変数名 | 説明 |
 |--------|------|
-| `BRAVE_API_KEY` | Brave Search API キー |
-| `GOOGLE_ACCESS_TOKEN` | Google アカウントのアクセストークン (NotebookLM 用) |
-| `DISCORD_WEBHOOK_URL` | Discord Webhook URL |
+| `DISCORD_BOT_TOKEN` | Discord Bot トークン (ニュース取得用) |
+| `NEWS_CHANNEL_ID` | ニュース取得元の Discord チャンネル ID |
+| `NEWS_BOT_ID` | ニュース投稿 Bot の ID (フィルタ用、任意) |
+| `DISCORD_WEBHOOK_URL` | 音声投稿先の Discord Webhook URL |
 
 ### 実行
 

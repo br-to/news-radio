@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "news-radio"
 version = "0.1.0"
-description = "Daily news audio generator using NotebookLM and Brave Search"
+description = "Daily news audio generator using NotebookLM"
 requires-python = ">=3.12"
 dependencies = [
     "notebooklm-py>=0.1.0",

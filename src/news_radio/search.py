@@ -1,45 +1,74 @@
-"""Brave Search API client for fetching news articles."""
+"""Discord channel news fetcher."""
 
 import os
 import logging
+from datetime import datetime, timezone, timedelta
 
 import httpx
 
 logger = logging.getLogger(__name__)
 
-BRAVE_SEARCH_URL = "https://api.search.brave.com/res/v1/news/search"
+DISCORD_API_BASE = "https://discord.com/api/v10"
 
 
-async def fetch_news(query: str = "latest news today", count: int = 5) -> list[dict]:
-    """Fetch news articles from Brave Search API.
+async def fetch_news(
+    channel_id: str | None = None,
+    bot_id: str | None = None,
+    limit: int = 20,
+) -> str:
+    """Fetch recent news messages from a Discord channel.
+
+    Retrieves messages posted by the specified bot within the last 24 hours
+    and combines them into a single text block suitable for audio generation.
 
     Args:
-        query: Search query string.
-        count: Number of articles to retrieve.
+        channel_id: Discord channel ID. Falls back to NEWS_CHANNEL_ID env var.
+        bot_id: Filter messages by this author ID. Falls back to NEWS_BOT_ID env var.
+        limit: Max messages to fetch from Discord API.
 
     Returns:
-        List of article dicts with 'title', 'url', and 'description' keys.
+        Combined news text ready for NotebookLM input.
     """
-    api_key = os.environ["BRAVE_API_KEY"]
+    token = os.environ["DISCORD_BOT_TOKEN"]
+    channel_id = channel_id or os.environ["NEWS_CHANNEL_ID"]
+    bot_id = bot_id or os.environ.get("NEWS_BOT_ID")
+
+    headers = {
+        "Authorization": f"Bot {token}",
+    }
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            BRAVE_SEARCH_URL,
-            headers={"X-Subscription-Token": api_key},
-            params={"q": query, "count": count},
+            f"{DISCORD_API_BASE}/channels/{channel_id}/messages",
+            headers=headers,
+            params={"limit": limit},
         )
         response.raise_for_status()
 
-    data = response.json()
-    results = data.get("results", [])
+    messages = response.json()
 
-    articles = [
-        {
-            "title": r.get("title", ""),
-            "url": r.get("url", ""),
-            "description": r.get("description", ""),
-        }
-        for r in results
-    ]
+    # Filter by bot author if specified
+    if bot_id:
+        messages = [m for m in messages if m.get("author", {}).get("id") == bot_id]
 
-    return articles
+    # Filter to last 24 hours
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    recent = []
+    for msg in messages:
+        ts = datetime.fromisoformat(msg["timestamp"].replace("+00:00", "+00:00"))
+        if ts >= cutoff:
+            recent.append(msg)
+
+    if not recent:
+        logger.warning("No recent news messages found in channel %s", channel_id)
+        return ""
+
+    # Messages come newest-first from Discord API, reverse for chronological order
+    recent.reverse()
+
+    # Combine message contents
+    texts = [msg["content"] for msg in recent if msg.get("content")]
+    combined = "\n\n".join(texts)
+
+    logger.info("Fetched %d news messages from Discord", len(texts))
+    return combined

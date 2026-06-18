@@ -18,12 +18,15 @@ async def run() -> None:
     """Run the full news radio pipeline."""
     logger.info("Starting news radio pipeline")
 
-    # Step 1: Fetch news articles
-    articles = await fetch_news()
-    logger.info("Fetched %d articles", len(articles))
+    # Step 1: Fetch news from Discord channel
+    news_text = await fetch_news()
+    if not news_text:
+        logger.info("No news found. Skipping.")
+        return
+    logger.info("Fetched news text (%d chars)", len(news_text))
 
     # Step 2: Generate audio overview
-    audio_path = await generate_audio(articles)
+    audio_path = await generate_audio(news_text)
     logger.info("Generated audio: %s", audio_path)
 
     # Step 3: Post to Discord
