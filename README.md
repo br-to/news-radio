@@ -8,7 +8,7 @@
 [ニューステキスト入力]
  |
  v
-[notebooklm CLI] --- Audio Overview (DEFAULT, 10-15分) を生成
+[notebooklm CLI] --- Audio Overview (DEFAULT, brief format) を生成
  |
  v
 [NotebookLM通知] --- 生成完了をプッシュ通知
@@ -30,6 +30,7 @@ news-radio/
 │       ├── main.py          # エントリーポイント (テキスト → 音声生成)
 │       └── audio.py         # NotebookLM CLI で Audio Overview 生成
 ├── pyproject.toml
+├── SKILL.md
 ├── .gitignore
 └── README.md
 ```
@@ -54,16 +55,12 @@ pip install notebooklm-py
 notebooklm auth login
 ```
 
-もしくは手動で storage_state.json を配置する。詳細は notebooklm-py のドキュメントを参照。
-
-### ノートブックのセットアップ（初回のみ）
+### 初回ノートブック作成
 
 ```bash
 notebooklm create "News Radio" --json
 notebooklm use <notebook_id>
 ```
-
-以降の実行では同じノートブックを使い回す。ソースは毎回差し替えられる。
 
 ## 使い方
 
@@ -73,30 +70,12 @@ python -m news_radio news.txt
 
 # stdin から読み込み
 echo "Today's news..." | python -m news_radio
-
-# Python から呼び出し
-from news_radio.main import run
-await run(news_text)
 ```
 
-## notebooklm CLI コマンド (内部で使用)
+## 音声スタイル
 
-```bash
-# ソース一覧
-notebooklm source list
-
-# ソース削除
-notebooklm source delete <source_id>
-
-# ソース追加
-notebooklm source add ./news_input.txt --title "Today's News"
-
-# Audio Overview 生成 (DEFAULT, 日本語, 完了待ち)
-notebooklm generate audio --length default --language ja --wait --timeout 900 --retry 2
-
-# 音声ダウンロード
-notebooklm download audio ./output.mp3 --latest --force
-```
+`--format brief` + プロンプト指示で落ち着いたトーンで生成。
+大袈裟なリアクションを抑えた淡々としたニュース解説形式。
 
 ## ライセンス
 

@@ -5,7 +5,6 @@ import logging
 import sys
 
 from news_radio.audio import generate_audio
-from news_radio.discord import post_to_discord
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 async def run(news_text: str) -> None:
-    """Run the audio generation and posting pipeline.
+    """Run the audio generation pipeline.
 
     Args:
-        news_text: News text to convert to audio and post.
+        news_text: News text to convert to audio.
     """
     if not news_text.strip():
         logger.info("No news text provided. Skipping.")
@@ -29,13 +28,6 @@ async def run(news_text: str) -> None:
     # Generate audio overview via notebooklm CLI
     audio_path = await generate_audio(news_text)
     logger.info("Generated audio: %s", audio_path)
-
-    # Post to Discord
-    await post_to_discord(audio_path, title="News Radio")
-    logger.info("Posted to Discord")
-
-    # Clean up temp file
-    audio_path.unlink(missing_ok=True)
     logger.info("Pipeline complete")
 
 
