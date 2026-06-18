@@ -1,17 +1,14 @@
 # News Radio
 
-毎朝自動でニュースを収集し、NotebookLM の Audio Overview 機能を使って音声ニュース番組を生成、Discord に投稿するボットです。
+毎朝のニュースを NotebookLM の Audio Overview 機能でラジオ風音声に変換し、Discord に投稿するツール。
 
 ## 構成図
 
 ```
-cron (毎朝 7:00 JST)
+[ニューステキスト入力]
   |
   v
-[Brave Search API] --- ニュース記事を検索・取得
-  |
-  v
-[notebooklm-py] --- 記事を元に Audio Overview (音声) を生成
+[notebooklm-py] --- Audio Overview (SHORT, 5-7分) を生成
   |
   v
 [Discord Webhook] --- 生成した音声ファイルを投稿
@@ -20,8 +17,7 @@ cron (毎朝 7:00 JST)
 ## 技術スタック
 
 - Python 3.12
-- [notebooklm-py](https://github.com/nichochar/notebooklm-py) - 非公式 NotebookLM API クライアント
-- Brave Search API - ニュース検索
+- [notebooklm-py](https://github.com/teng-lin/notebooklm-py) - 非公式 NotebookLM API クライアント
 - Discord Webhook - 音声ファイルの配信
 
 ## ディレクトリ構成
@@ -31,8 +27,8 @@ news-radio/
 ├── src/
 │   └── news_radio/
 │       ├── __init__.py
-│       ├── main.py          # エントリーポイント
-│       ├── search.py        # Brave Search によるニュース取得
+│       ├── __main__.py      # python -m news_radio 用
+│       ├── main.py          # エントリーポイント (テキスト → 音声 → 投稿)
 │       ├── audio.py         # NotebookLM Audio Overview 生成
 │       └── discord.py       # Discord Webhook 投稿
 ├── pyproject.toml
@@ -45,37 +41,46 @@ news-radio/
 ### 前提条件
 
 - Python 3.12 以上
-- 各種 API キー
+- Google アカウント (NotebookLM 用)
 
 ### インストール
 
 ```bash
-# リポジトリをクローン
 git clone https://github.com/br-to/news-radio.git
 cd news-radio
-
-# 依存関係のインストール
 pip install -e .
 ```
 
-### 環境変数
+### 認証 (NotebookLM)
 
-以下の環境変数を設定してください:
+notebooklm-py はブラウザの Google セッション cookie で認証する。
+
+```bash
+pip install "notebooklm-py[cookies]"
+notebooklm auth login
+```
+
+もしくは手動で `storage_state.json` を配置する。詳細は notebooklm-py のドキュメントを参照。
+
+### 環境変数
 
 | 変数名 | 説明 |
 |--------|------|
-| `BRAVE_API_KEY` | Brave Search API キー |
-| `GOOGLE_ACCESS_TOKEN` | Google アカウントのアクセストークン (NotebookLM 用) |
-| `DISCORD_WEBHOOK_URL` | Discord Webhook URL |
+| `NOTEBOOKLM_STORAGE_PATH` | NotebookLM の storage_state.json パス (任意) |
+| `DISCORD_WEBHOOK_URL` | 音声投稿先の Discord Webhook URL |
 
-### 実行
+### 使い方
 
 ```bash
-# 手動実行
-python -m news_radio
+# ファイルから読み込み
+python -m news_radio news.txt
 
-# cron 設定例 (毎朝 7:00 JST = 22:00 UTC 前日)
-0 22 * * * cd /path/to/news-radio && python -m news_radio
+# stdin から読み込み
+echo "Today's news..." | python -m news_radio
+
+# Python から呼び出し
+from news_radio.main import run
+await run(news_text)
 ```
 
 ## ライセンス
