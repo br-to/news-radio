@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-import os
+import sys
 
 from news_radio.audio import generate_audio
 from news_radio.discord import post_to_discord
@@ -26,27 +26,24 @@ async def run(news_text: str) -> None:
 
     logger.info("Starting news radio pipeline (%d chars)", len(news_text))
 
-    # Generate audio overview
-    storage_path = os.environ.get("NOTEBOOKLM_STORAGE_PATH")
-    audio_path = await generate_audio(news_text, storage_path=storage_path)
+    # Generate audio overview via notebooklm CLI
+    audio_path = await generate_audio(news_text)
     logger.info("Generated audio: %s", audio_path)
 
     # Post to Discord
-    await post_to_discord(audio_path)
+    await post_to_discord(audio_path, title="News Radio")
     logger.info("Posted to Discord")
 
+    # Clean up temp file
+    audio_path.unlink(missing_ok=True)
     logger.info("Pipeline complete")
 
 
 def main() -> None:
-    """CLI entry point for standalone testing."""
-    import sys
-
+    """CLI entry point."""
     if len(sys.argv) > 1:
-        # Read news text from file
         text = open(sys.argv[1]).read()
     else:
-        # Read from stdin
         text = sys.stdin.read()
 
     asyncio.run(run(text))
