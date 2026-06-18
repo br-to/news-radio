@@ -69,12 +69,11 @@ async def generate_audio(
         raise RuntimeError(f"Failed to add source: {stderr}")
     logger.info("Added news text as source")
 
-    # Generate audio overview (default length, brief format, calm tone)
+    # Generate audio overview (default length, calm tone)
     stdout, stderr, rc = await _run_cmd([
         "notebooklm", "generate", "audio",
         AUDIO_PROMPT,
         "--length", "default",
-        "--format", "brief",
         "--language", "ja",
         "--wait",
         "--timeout", "900",
