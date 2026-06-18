@@ -42,7 +42,7 @@ async def run(news_text: str) -> None:
 def main() -> None:
     """CLI entry point."""
     if len(sys.argv) > 1:
-        text = open(sys.argv[1]).read()
+        text = open(sys.argv[1], encoding="utf-8").read()
     else:
         text = sys.stdin.read()
 
