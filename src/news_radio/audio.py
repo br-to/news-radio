@@ -1,13 +1,12 @@
 """Audio generation using NotebookLM CLI."""
 
 import asyncio
+import json
 import logging
 import tempfile
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
-
-NOTEBOOK_TITLE = "News Radio"
 
 
 async def _run_cmd(cmd: list[str]) -> tuple[str, str, int]:
@@ -27,9 +26,9 @@ async def generate_audio(
 ) -> Path:
     """Generate an audio overview from news text using notebooklm CLI.
 
-    Creates a temporary notebook, adds the news text as a source,
-    generates an Audio Overview (SHORT length), downloads the MP3,
-    then cleans up the notebook.
+    Uses a pre-configured persistent notebook (set via `notebooklm use <id>`).
+    Replaces existing sources with the new news text, generates an Audio Overview,
+    and downloads the MP3.
 
     Args:
         news_text: Combined news text to convert to audio.
@@ -44,62 +43,48 @@ async def generate_audio(
     output_dir = output_dir or tempfile.gettempdir()
     output_path = Path(output_dir) / "news_radio.mp3"
 
-    # Create a notebook
-    stdout, stderr, rc = await _run_cmd(["notebooklm", "create", NOTEBOOK_TITLE, "--json"])
+    # Delete existing sources to avoid mixing old news
+    stdout, stderr, rc = await _run_cmd(["notebooklm", "source", "list", "--json"])
+    if rc == 0 and stdout.strip():
+        sources = json.loads(stdout)
+        for source in sources:
+            await _run_cmd(["notebooklm", "source", "delete", source["id"]])
+        logger.info("Deleted %d existing sources", len(sources))
+
+    # Write news text to temp file and add as source
+    text_file = Path(tempfile.gettempdir()) / "news_radio_input.txt"
+    text_file.write_text(news_text, encoding="utf-8")
+
+    stdout, stderr, rc = await _run_cmd([
+        "notebooklm", "source", "add", str(text_file),
+        "--title", "Today's News",
+    ])
     if rc != 0:
-        raise RuntimeError(f"Failed to create notebook: {stderr}")
+        raise RuntimeError(f"Failed to add source: {stderr}")
+    logger.info("Added news text as source")
 
-    import json
-    notebook_data = json.loads(stdout)
-    notebook_id = notebook_data["id"]
-    logger.info("Created notebook: %s", notebook_id)
+    # Generate audio overview (default length for better quality)
+    stdout, stderr, rc = await _run_cmd([
+        "notebooklm", "generate", "audio",
+        "--length", "default",
+        "--language", "ja",
+        "--wait",
+        "--timeout", "900",
+        "--retry", "2",
+    ])
+    if rc != 0:
+        raise RuntimeError(f"Audio generation failed: {stderr}")
+    logger.info("Audio generation complete")
 
-    try:
-        # Set as current notebook
-        await _run_cmd(["notebooklm", "use", notebook_id])
-
-        # Write news text to a temp file and add as source
-        text_file = Path(tempfile.gettempdir()) / "news_input.txt"
-        text_file.write_text(news_text, encoding="utf-8")
-
-        stdout, stderr, rc = await _run_cmd([
-            "notebooklm", "source", "add", str(text_file),
-            "--title", "Today's News",
-        ])
-        if rc != 0:
-            raise RuntimeError(f"Failed to add source: {stderr}")
-        logger.info("Added news text as source")
-
-        # Generate audio overview (short, wait for completion)
-        stdout, stderr, rc = await _run_cmd([
-            "notebooklm", "generate", "audio",
-            "--length", "short",
-            "--language", "ja",
-            "--wait",
-            "--timeout", "900",
-            "--retry", "2",
-        ])
-        if rc != 0:
-            raise RuntimeError(f"Audio generation failed: {stderr}")
-        logger.info("Audio generation complete")
-
-        # Download the latest audio
-        stdout, stderr, rc = await _run_cmd([
-            "notebooklm", "download", "audio",
-            str(output_path),
-            "--latest",
-            "--force",
-        ])
-        if rc != 0:
-            raise RuntimeError(f"Failed to download audio: {stderr}")
-        logger.info("Audio downloaded: %s", output_path)
-
-    finally:
-        # Clean up the notebook
-        stdout, stderr, rc = await _run_cmd(["notebooklm", "delete", notebook_id, "--confirm"])
-        if rc == 0:
-            logger.info("Cleaned up notebook: %s", notebook_id)
-        else:
-            logger.warning("Failed to delete notebook %s: %s", notebook_id, stderr)
+    # Download the latest audio
+    stdout, stderr, rc = await _run_cmd([
+        "notebooklm", "download", "audio",
+        str(output_path),
+        "--latest",
+        "--force",
+    ])
+    if rc != 0:
+        raise RuntimeError(f"Failed to download audio: {stderr}")
+    logger.info("Audio downloaded: %s", output_path)
 
     return output_path

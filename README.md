@@ -56,6 +56,15 @@ notebooklm auth login
 
 もしくは手動で storage_state.json を配置する。詳細は notebooklm-py のドキュメントを参照。
 
+### ノートブックのセットアップ（初回のみ）
+
+```bash
+notebooklm create "News Radio" --json
+notebooklm use <notebook_id>
+```
+
+以降の実行では同じノートブックを使い回す。ソースは毎回差し替えられる。
+
 ## 使い方
 
 ```bash
@@ -73,8 +82,11 @@ await run(news_text)
 ## notebooklm CLI コマンド (内部で使用)
 
 ```bash
-# ノートブック作成
-notebooklm create "News Radio" --json
+# ソース一覧
+notebooklm source list
+
+# ソース削除
+notebooklm source delete <source_id>
 
 # ソース追加
 notebooklm source add ./news_input.txt --title "Today's News"
@@ -82,11 +94,8 @@ notebooklm source add ./news_input.txt --title "Today's News"
 # Audio Overview 生成 (DEFAULT, 日本語, 完了待ち)
 notebooklm generate audio --length default --language ja --wait --timeout 900 --retry 2
 
-# 音声ダウンロード (必要な場合)
+# 音声ダウンロード
 notebooklm download audio ./output.mp3 --latest --force
-
-# ノートブック削除
-notebooklm delete <notebook_id> --confirm
 ```
 
 ## ライセンス
