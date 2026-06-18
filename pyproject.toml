@@ -4,12 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "news-radio"
-version = "0.2.0"
-description = "Daily news audio generator using NotebookLM CLI and Discord Webhook"
+version = "0.3.0"
+description = "Daily news audio generator using NotebookLM CLI"
 requires-python = ">=3.12"
-dependencies = [
-    "httpx>=0.27.0",
-]
+dependencies = []
 
 [project.scripts]
 news-radio = "news_radio.main:main"

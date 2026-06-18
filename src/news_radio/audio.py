@@ -8,6 +8,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+AUDIO_PROMPT = (
+    "落ち着いたトーンでニュースを解説してください。"
+    "大袈裟なリアクションや過度な興奮は不要。"
+    "淡々と事実を伝え、冷静に考察を話す形式で。"
+)
+
 
 async def _run_cmd(cmd: list[str]) -> tuple[str, str, int]:
     """Run a shell command and return stdout, stderr, returncode."""
@@ -63,10 +69,12 @@ async def generate_audio(
         raise RuntimeError(f"Failed to add source: {stderr}")
     logger.info("Added news text as source")
 
-    # Generate audio overview (default length for better quality)
+    # Generate audio overview (default length, brief format, calm tone)
     stdout, stderr, rc = await _run_cmd([
         "notebooklm", "generate", "audio",
+        AUDIO_PROMPT,
         "--length", "default",
+        "--format", "brief",
         "--language", "ja",
         "--wait",
         "--timeout", "900",
