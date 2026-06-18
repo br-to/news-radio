@@ -59,6 +59,16 @@ notebooklm auth login
 
 もしくは手動で storage_state.json を配置する。詳細は notebooklm-py のドキュメントを参照。
 
+### ノートブックのセットアップ（初回のみ）
+
+```bash
+# ノートブックを作成して使用するノートブックとして設定する
+notebooklm create "News Radio" --json
+notebooklm use <notebook_id>
+```
+
+以降の実行では同じノートブックを使い回す。ソースは毎回差し替えられる。
+
 ## 環境変数
 
 | 変数名 | 説明 |
