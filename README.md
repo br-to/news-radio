@@ -8,7 +8,7 @@
 [ニューステキスト入力]
  |
  v
-[notebooklm CLI] --- Audio Overview (DEFAULT, 10-15分) を生成
+[notebooklm-py] --- Audio Overview (DEFAULT, 10-15分) を生成
  |
  v
 [NotebookLM通知] --- 生成完了をプッシュ通知
@@ -17,7 +17,7 @@
 ## 技術スタック
 
 - Python 3.12
-- [notebooklm CLI](https://github.com/teng-lin/notebooklm-py) - NotebookLM CLI クライアント (`pip install notebooklm-py`)
+- [notebooklm-py](https://github.com/teng-lin/notebooklm-py) - NotebookLM 非公式Pythonライブラリ。`pip install notebooklm-py` で `notebooklm` コマンドが使えるようになる
 
 ## ディレクトリ構成
 
@@ -28,7 +28,7 @@ news-radio/
 │       ├── __init__.py
 │       ├── __main__.py      # python -m news_radio 用
 │       ├── main.py          # エントリーポイント (テキスト → 音声生成)
-│       └── audio.py         # NotebookLM CLI で Audio Overview 生成
+│       └── audio.py         # notebooklm-py で Audio Overview 生成
 ├── pyproject.toml
 ├── .gitignore
 └── README.md
@@ -37,7 +37,7 @@ news-radio/
 ## 前提条件
 
 - Python 3.12 以上
-- `notebooklm` CLI がインストール済み・認証済み
+- `notebooklm-py` がインストール済み・認証済み
 
 ## セットアップ
 
@@ -47,7 +47,7 @@ cd news-radio
 pip install -e .
 ```
 
-### notebooklm CLI 認証
+### notebooklm-py のインストールと認証
 
 ```bash
 pip install notebooklm-py
@@ -79,7 +79,7 @@ from news_radio.main import run
 await run(news_text)
 ```
 
-## notebooklm CLI コマンド (内部で使用)
+## notebooklm コマンドリファレンス (内部で使用)
 
 ```bash
 # ソース一覧
