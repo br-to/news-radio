@@ -5,7 +5,7 @@
 ## アーキテクチャ
 
 ```
-[cron / OpenClaw]  毎朝 7:00 JST
+[Mac / PC の cron]  毎朝 7:00
        |
        v
 [Brave Search API] --- AI / blockchain / prediction market のニュース収集
@@ -63,29 +63,49 @@ python -m news_radio news.txt
 python -m news_radio --async news.txt
 ```
 
-## 完全自動化
+## 完全自動化（OpenClaw 不要）
 
-### cron（推奨・最も安定）
+**動かす場所 = 普段使ってる Mac / PC 本体。** OpenClaw も Cowork も不要。
+
+notebooklm のログイン状態はそのマシンに保存されるので、cron も同じマシンで回す。
+
+### Mac（おすすめ）
 
 ```bash
-# 毎朝 7:00 JST
+# 1. セットアップ
+git clone https://github.com/br-to/news-radio.git
+cd news-radio
+pip install -e .
+cp .env.example .env          # キーを埋める
+notebooklm auth login         # ブラウザで Google ログイン
+notebooklm use <notebook_id>
+
+# 2. 動作確認
+./scripts/daily.sh
+
+# 3. 毎朝 7:00 に自動実行（launchd）
+chmod +x scripts/install-macos.sh
+./scripts/install-macos.sh
+```
+
+Mac が 7 時にスリープしてると動かない。  
+「システム設定 → バッテリー → スケジュール」で 6:55 に起動、などの設定が必要。
+
+### Linux / WSL
+
+```bash
+crontab -e
+# 毎朝 7:00
 0 7 * * * /path/to/news-radio/scripts/daily.sh >> /tmp/news-radio.log 2>&1
 ```
 
-### OpenClaw cron
+### 常時起動マシンがない場合
 
-notebooklm 認証済みのマシンで Gateway が動いている前提:
-
-```bash
-openclaw cron add \
-  --name "News Radio" \
-  --cron "0 7 * * *" \
-  --tz "Asia/Tokyo" \
-  --session isolated \
-  --message "cd /path/to/news-radio && source .env && python -m news_radio"
-```
-
-Cowork ではなく **cron + ローカル実行** が OpenClaw 時代と同じ安定性を出せます。
+| 方法 | 内容 |
+|------|------|
+| 古い PC / Raspberry Pi | 安価な常時起動マシンにセットアップ |
+| 手動実行 | 朝 `./scripts/daily.sh` を叩く（Discord 通知は来る） |
+| Cursor Automation | Private Worker 経由でローカル実行（Cursor 契約者向け） |
 
 ## 音声スタイル
 

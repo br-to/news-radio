@@ -14,41 +14,23 @@ description: "Fully automated daily news radio: Brave Search → NotebookLM → 
 - `news-radio` インストール済み (`pip install -e .`)
 - 環境変数: `BRAVE_API_KEY`, `DISCORD_WEBHOOK_URL`
 
-## 完全自動実行（推奨）
+## 完全自動実行（OpenClaw 不要）
 
 ```bash
 python -m news_radio
 ```
 
-これだけで:
-1. Brave Search で AI / blockchain / prediction market のニュース収集
-2. NotebookLM で音声生成（15〜20 分待機）
-3. Discord に MP3 投稿 + 進捗・エラー通知
+## スケジュール実行
 
-## OpenClaw での設定
-
-Cowork ではなく **cron** を使う。OpenClaw 時代と同じ完全自動化がこれで再現できる。
+**自分の Mac / PC 上で動かす。** OpenClaw は不要。
 
 ```bash
-openclaw cron add \
-  --name "News Radio" \
-  --cron "0 7 * * *" \
-  --tz "Asia/Tokyo" \
-  --session isolated \
-  --message "cd /path/to/news-radio && source .env && python -m news_radio"
-```
+# Mac
+./scripts/install-macos.sh
 
-または `scripts/daily.sh` を cron に登録:
-
-```bash
+# Linux
 0 7 * * * /path/to/news-radio/scripts/daily.sh >> /tmp/news-radio.log 2>&1
 ```
-
-### Cowork が向かない理由
-
-- 15〜20 分の `--wait` でセッションが切れる
-- notebooklm 認証はローカルマシンに紐づく
-- web_search 手動ステップは不要（Brave Search API で代替済み）
 
 ## 手動モード
 
