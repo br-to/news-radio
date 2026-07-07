@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
-# Daily news radio runner for cron/local automation.
-# Usage: ./scripts/daily.sh [news_text_file]
-# Default input: /tmp/news_radio_input.txt
+# Full daily automation: Brave Search → NotebookLM → Discord
+#
+# Setup:
+#   1. cp .env.example .env && fill in values
+#   2. source .env
+#   3. crontab -e:
+#      0 7 * * * /path/to/news-radio/scripts/daily.sh >> /tmp/news-radio.log 2>&1
 
 set -euo pipefail
 
-INPUT="${1:-/tmp/news_radio_input.txt}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-if [[ ! -f "$INPUT" ]]; then
-  echo "Error: input file not found: $INPUT" >&2
-  exit 1
+# Load env if present
+if [[ -f "$PROJECT_DIR/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$PROJECT_DIR/.env"
+  set +a
 fi
 
-exec python -m news_radio --async "$INPUT"
+cd "$PROJECT_DIR"
+exec python -m news_radio
