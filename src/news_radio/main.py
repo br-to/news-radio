@@ -1,5 +1,6 @@
 """Entry point for the news radio pipeline."""
 
+import argparse
 import asyncio
 import logging
 import sys
@@ -13,11 +14,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-async def run(news_text: str) -> None:
+async def run(news_text: str, *, wait: bool = True) -> None:
     """Run the audio generation pipeline.
 
     Args:
         news_text: News text to convert to audio.
+        wait: If True, wait for generation and download MP3.
     """
     if not news_text.strip():
         logger.info("No news text provided. Skipping.")
@@ -25,20 +27,34 @@ async def run(news_text: str) -> None:
 
     logger.info("Starting news radio pipeline (%d chars)", len(news_text))
 
-    # Generate audio overview via notebooklm CLI
-    audio_path = await generate_audio(news_text)
-    logger.info("Generated audio: %s", audio_path)
+    audio_path = await generate_audio(news_text, wait=wait)
+    if audio_path:
+        logger.info("Generated audio: %s", audio_path)
     logger.info("Pipeline complete")
 
 
 def main() -> None:
     """CLI entry point."""
-    if len(sys.argv) > 1:
-        text = open(sys.argv[1], encoding="utf-8").read()
+    parser = argparse.ArgumentParser(description="Generate news radio audio via NotebookLM")
+    parser.add_argument(
+        "input_file",
+        nargs="?",
+        help="News text file. Reads stdin if omitted.",
+    )
+    parser.add_argument(
+        "--async",
+        dest="async_mode",
+        action="store_true",
+        help="Start generation and exit immediately (for Cowork/automation).",
+    )
+    args = parser.parse_args()
+
+    if args.input_file:
+        text = open(args.input_file, encoding="utf-8").read()
     else:
         text = sys.stdin.read()
 
-    asyncio.run(run(text))
+    asyncio.run(run(text, wait=not args.async_mode))
 
 
 if __name__ == "__main__":

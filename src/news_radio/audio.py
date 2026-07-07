@@ -29,19 +29,23 @@ async def _run_cmd(cmd: list[str]) -> tuple[str, str, int]:
 async def generate_audio(
     news_text: str,
     output_dir: str | None = None,
-) -> Path:
+    *,
+    wait: bool = True,
+) -> Path | None:
     """Generate an audio overview from news text using notebooklm CLI.
 
     Uses a pre-configured persistent notebook (set via `notebooklm use <id>`).
     Replaces existing sources with the new news text, generates an Audio Overview,
-    and downloads the MP3.
+    and optionally downloads the MP3.
 
     Args:
         news_text: Combined news text to convert to audio.
         output_dir: Directory to save the audio file. Defaults to temp dir.
+        wait: If True, wait for generation and download MP3. If False, kick off
+            generation and return immediately (NotebookLM push notification).
 
     Returns:
-        Path to the generated MP3 file.
+        Path to the generated MP3 file when wait=True, otherwise None.
     """
     if not news_text.strip():
         raise ValueError("news_text is empty")
@@ -70,17 +74,23 @@ async def generate_audio(
     logger.info("Added news text as source")
 
     # Generate audio overview (default length, calm tone)
-    stdout, stderr, rc = await _run_cmd([
+    generate_cmd = [
         "notebooklm", "generate", "audio",
         AUDIO_PROMPT,
         "--length", "default",
         "--language", "ja",
-        "--wait",
-        "--timeout", "900",
         "--retry", "2",
-    ])
+    ]
+    if wait:
+        generate_cmd.extend(["--wait", "--timeout", "900"])
+    stdout, stderr, rc = await _run_cmd(generate_cmd)
     if rc != 0:
         raise RuntimeError(f"Audio generation failed: {stderr}")
+
+    if not wait:
+        logger.info("Audio generation started (async). Check NotebookLM app for completion.")
+        return None
+
     logger.info("Audio generation complete")
 
     # Download the latest audio

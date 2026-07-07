@@ -65,11 +65,14 @@ notebooklm use <notebook_id>
 ## 使い方
 
 ```bash
-# ファイルから読み込み
+# ファイルから読み込み（MP3 ダウンロードまで待つ）
 python -m news_radio news.txt
 
 # stdin から読み込み
 echo "Today's news..." | python -m news_radio
+
+# Cowork / cron 向け: 生成開始だけして即終了
+python -m news_radio --async news.txt
 ```
 
 ## 音声スタイル
