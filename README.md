@@ -88,8 +88,21 @@ chmod +x scripts/install-macos.sh
 ./scripts/install-macos.sh
 ```
 
-Mac が 7 時にスリープしてると動かない。  
-「システム設定 → バッテリー → スケジュール」で 6:55 に起動、などの設定が必要。
+Mac が 7 時にスリープしてると、その場では動かない（**次に Mac を起こしたときに実行**される）。
+
+7:00 ちょうどに動かしたい場合:
+
+```bash
+# 6:55 に Mac を自動起動して 7:00 実行（電源接続推奨）
+./scripts/install-macos.sh --wake
+```
+
+手動設定する場合:
+
+```bash
+sudo pmset repeat wakeorpoweron MTWRFSU 06:55:00
+# 解除: sudo pmset repeat cancel
+```
 
 ### Linux / WSL
 
