@@ -52,7 +52,7 @@ async def generate_audio(
     # Delete existing sources to avoid mixing old news
     stdout, stderr, rc = await _run_cmd(["notebooklm", "source", "list", "--json"])
     if rc == 0 and stdout.strip():
-        sources = json.loads(stdout)
+        sources = json.loads(stdout).get("sources", [])
         for source in sources:
             await _run_cmd(["notebooklm", "source", "delete", source["id"]])
         logger.info("Deleted %d existing sources", len(sources))
@@ -64,6 +64,7 @@ async def generate_audio(
     stdout, stderr, rc = await _run_cmd([
         "notebooklm", "source", "add", str(text_file),
         "--title", "Today's News",
+        "--follow-symlinks",
     ])
     if rc != 0:
         raise RuntimeError(f"Failed to add source: {stderr}")

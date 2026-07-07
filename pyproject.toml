@@ -7,7 +7,10 @@ name = "news-radio"
 version = "0.3.0"
 description = "Daily news audio generator using NotebookLM CLI"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "httpx>=0.27",
+]
 
 [project.scripts]
 news-radio = "news_radio.main:main"
+news-radio-auto = "news_radio.pipeline:main"
