@@ -22,6 +22,10 @@ if [[ ! -f "$PROJECT_DIR/.env" ]]; then
   exit 1
 fi
 
+if ! command -v notebooklm >/dev/null 2>&1; then
+  echo "Warning: notebooklm CLI not found. Run: pip install notebooklm-py && notebooklm auth login" >&2
+fi
+
 sed "s|/REPLACE/WITH/PATH/TO/news-radio|$PROJECT_DIR|g" "$PLIST_SRC" > "$PLIST_DST"
 launchctl unload "$PLIST_DST" 2>/dev/null || true
 launchctl load "$PLIST_DST"

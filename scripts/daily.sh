@@ -21,4 +21,18 @@ if [[ -f "$PROJECT_DIR/.env" ]]; then
 fi
 
 cd "$PROJECT_DIR"
-exec python -m news_radio
+
+PYTHON=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    PYTHON="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$PYTHON" ]]; then
+  echo "Error: python3 not found" >&2
+  exit 1
+fi
+
+exec "$PYTHON" -m news_radio
